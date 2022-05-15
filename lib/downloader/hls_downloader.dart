@@ -165,6 +165,7 @@ class HlsDownloader with Cancelable implements Downloader {
           payload.chunksCount) {
         payload = payload.copyWith(
             status: VideoDownloadProgressStatus.success,
+            playFile: _m3u8Name,
             endTime: DateTime.now());
       }
       _downloadProgress = payload;
