@@ -199,6 +199,11 @@ class HlsDownloader with Cancelable implements Downloader {
     _dio.download(
       segment.url,
       savePath,
+      options: Options(
+        headers: {
+          'user-agent': userAgent
+        }
+      ),
       cancelToken: getCancelToken(),
       onReceiveProgress: (int loaded, int total) {
         _progressMap[segment.filename] = _TsProgress(

@@ -154,10 +154,13 @@ class Mp4Downloader with Cancelable implements Downloader {
     final String savePath = path.join(_saveDir, range.filename);
     final int start = range.start;
     final String end = range.end == 0 ? '' : range.end.toString();
-    final Map<String, dynamic> headers = {};
+    final Map<String, dynamic> headers = {
+      'user-agent': userAgent
+    };
     if (start != -1) {
       headers[HttpHeaders.rangeHeader] = 'bytes=$start-$end';
     }
+    debugPrint('${range.url} $headers');
     _dio.download(
       range.url,
       savePath,
@@ -231,7 +234,7 @@ class Mp4Downloader with Cancelable implements Downloader {
   }
 
   Future<List<_Range>> _getRangeList(String url) async {
-    final extension = path.url.extension(url);
+    final extension = path.url.extension(Uri.parse(url).path);
     final List<_Range> defaultList = [
       _Range(start: -1, end: -1, url: url, filename: '0$extension')
     ];

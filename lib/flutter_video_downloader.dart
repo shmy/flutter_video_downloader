@@ -25,7 +25,9 @@ class FlutterVideoDownloader extends ChangeNotifier {
 
   Future<void> start() async {
     late Downloader downloader;
-    final String extension = path.url.extension(_url).toLowerCase();
+    final Uri uri = Uri.parse(_url);
+    final String extension = path.url.extension(uri.path).toLowerCase();
+    debugPrint(extension);
     if (extension == '.m3u8') {
       downloader = HlsDownloader();
     } else if (['.flv', '.mp4', '.avi'].contains(extension)) {
