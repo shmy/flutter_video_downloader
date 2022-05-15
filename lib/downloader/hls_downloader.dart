@@ -86,7 +86,7 @@ class HlsDownloader with Cancelable implements Downloader {
   late VideoDownloadProgress _downloadProgress;
   ValueChanged<VideoDownloadProgress>? _onProgressUpdate;
 
-  int _maxCount = 5;
+  int _maxCount = 10;
   int _runningCount = 0;
   int _failedCount = 0;
   int _completedCount = 0;
@@ -166,6 +166,7 @@ class HlsDownloader with Cancelable implements Downloader {
         payload = payload.copyWith(
             status: VideoDownloadProgressStatus.success,
             playFile: _m3u8Name,
+            total: _downloadProgress.downloaded,
             endTime: DateTime.now());
       }
       _downloadProgress = payload;
@@ -206,6 +207,7 @@ class HlsDownloader with Cancelable implements Downloader {
       ),
       cancelToken: getCancelToken(),
       onReceiveProgress: (int loaded, int total) {
+        debugPrint('${segment.url}: loaded: $loaded, total: $total');
         _progressMap[segment.filename] = _TsProgress(
           loaded: loaded,
           total: total,

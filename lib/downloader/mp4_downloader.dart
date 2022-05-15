@@ -41,7 +41,7 @@ class Mp4Downloader with Cancelable implements Downloader {
   late VideoDownloadProgress _downloadProgress;
   ValueChanged<VideoDownloadProgress>? _onProgressUpdate;
   Timer? _timer;
-  int _maxCount = 5;
+  int _maxCount = 10;
   int _runningCount = 0;
   int _failedCount = 0;
   int _completedCount = 0;
@@ -167,6 +167,7 @@ class Mp4Downloader with Cancelable implements Downloader {
       cancelToken: getCancelToken(),
       options: Options(headers: headers),
       onReceiveProgress: (int loaded, int total) {
+        debugPrint('${range.url}: loaded: $loaded, total: $total');
         _progressMap[range.filename] = _DownloadProgress(
           loaded: loaded,
           total: total,
@@ -225,6 +226,7 @@ class Mp4Downloader with Cancelable implements Downloader {
       _downloadProgress = _downloadProgress.copyWith(
           status: VideoDownloadProgressStatus.success,
           playFile: filename,
+          total: _downloadProgress.downloaded,
           endTime: DateTime.now());
     } catch (e) {
       _downloadProgress = _downloadProgress.copyWith(
