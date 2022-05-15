@@ -51,32 +51,15 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Future<void> _start() async {
     final dir = await findLocalPath();
-    // videoDownloader = FlutterVideoDownloader.mp4(
-    //     'https://sf1-hscdn-tos.pstatp.com/obj/media-fe/xgplayer_doc_video/mp4/xgplayer-demo-720p.mp4',
-    videoDownloader = FlutterVideoDownloader.hls(
-        'http://192.168.2.161:3000/190204084208765161/index.m3u8',
-        dir)
+    videoDownloader = FlutterVideoDownloader(
+        url: 'http://192.168.2.161:3000/190204084208765161/index.m3u8',
+        saveDir: dir)
       ..start()
       ..addListener(() {
         final progress = videoDownloader!.progress;
         print(
             '(${progress.status})${progress.startTime}: ${_format2Mb(progress.downloaded)}/${_format2Mb(progress.total)} ${_format2Mb(progress.speed)}/s [${progress.failedChunksCount}+${progress.completedChunksCount}/${progress.chunksCount}] ${progress.saveDir}/${progress.playFile} ${progress.endTime}');
       });
-    // await FlutterVideoDownloader.download(
-    //     // 'https://sf1-hscdn-tos.pstatp.com/obj/media-fe/xgplayer_doc_video/hls/xgplayer-demo.m3u8',
-    //   // 'https://m3u8.taopianplay.com/taopian/ecd7f271-487e-48d6-9873-9edc06e79ce8/1e995a1c-d91d-4e6a-8716-2f76f90f9394/47916/40be6fca-f3f7-4078-9c9e-aba8d0a3512b/SD/playlist.m3u8',
-    //   // 'https://baidu.sd-play.com/20211029/dLDDtlZq/index.m3u8',
-    //   // 'https://new.iskcd.com/20220513/syYiD8Bk/index.m3u8',
-    //   // 'http://192.168.2.161:3000/190204084208765161/index.m3u8',
-    //   // 'https://sf1-hscdn-tos.pstatp.com/obj/media-fe/xgplayer_doc_video/mp4/xgplayer-demo-720p.mp4',
-    //   'https://sf1-hscdn-tos.pstatp.com/obj/media-fe/xgplayer_doc_video/flv/xgplayer-demo-360p.flv',
-    //   // 'http://150.158.130.238:4436/jm/api/?key=M7PJgp5NuoUDgsfQ9crSJQ%3D%3D.m3u8',
-    //     dir,
-    //     isHls: false, onProgressUpdate: (progress)  {
-    //     print('(${progress.status})${progress.startTime}: ${_format2Mb(progress.downloaded)}/${_format2Mb(progress.total)} ${_format2Mb(progress.speed)}/s [${progress.failedChunksCount}+${progress.completedChunksCount}/${progress.chunksCount}] ${progress.saveDir}/${progress.playFile} ${progress.endTime}');
-    // });
-    // await FlutterVideoDownloader.download('https://m3u8.taopianplay.com/taopian/ecd7f271-487e-48d6-9873-9edc06e79ce8/1e995a1c-d91d-4e6a-8716-2f76f90f9394/47916/40be6fca-f3f7-4078-9c9e-aba8d0a3512b/SD/playlist.m3u8', isHls: true);
-    // await FlutterVideoDownloader.download('https://new.iskcd.com/20220422/e9LNmEMj/index.m3u8', isHls: true);
   }
   void _cancel() {
     videoDownloader?.cancel();
