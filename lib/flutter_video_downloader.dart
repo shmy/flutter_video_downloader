@@ -14,13 +14,18 @@ class FlutterVideoDownloader extends ChangeNotifier {
   late String _url;
   late String _saveDir;
   late VideoDownloadProgress progress;
+  Map<String, String> _headers = {};
 
   FlutterVideoDownloader({
     required String url,
     required String saveDir,
+    Map<String, String>? headers,
   }) {
     _url = url;
     _saveDir = saveDir;
+    if (headers != null) {
+      _headers = headers;
+    }
   }
 
   Future<void> start() async {
@@ -34,7 +39,8 @@ class FlutterVideoDownloader extends ChangeNotifier {
       downloader = Mp4Downloader();
     } else {
       try {
-        final res = await Dio().head(_url);
+        final res = await Dio().head(_url,
+            options: Options(headers: {'user-agent': userAgent, ..._headers}));
         final String contentType =
             res.headers.value(Headers.contentTypeHeader) ?? '';
         if (contentType.startsWith('text/') ||
@@ -50,11 +56,15 @@ class FlutterVideoDownloader extends ChangeNotifier {
     _downloader = downloader;
     progress = VideoDownloadProgress.start(saveDir: _saveDir);
     await _mkdir(_saveDir);
-    _downloader.download(_url, _saveDir,
-        onProgressUpdate: (VideoDownloadProgress progress) {
-      this.progress = progress;
-      notifyListeners();
-    });
+    _downloader.download(
+      _url,
+      _saveDir,
+      _headers,
+      onProgressUpdate: (VideoDownloadProgress progress) {
+        this.progress = progress;
+        notifyListeners();
+      },
+    );
   }
 
   Future<void> cancel() async {

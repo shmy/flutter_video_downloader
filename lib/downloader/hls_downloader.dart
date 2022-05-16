@@ -84,8 +84,10 @@ class HlsDownloader with Cancelable implements Downloader {
   Timer? _timer;
   late final String _saveDir;
   late VideoDownloadProgress _downloadProgress;
+  late Map<String, String> _headers;
   ValueChanged<VideoDownloadProgress>? _onProgressUpdate;
-
+  Map<String, dynamic> get _defaultHeaders =>
+      {'user-agent': userAgent, ..._headers};
   int _maxCount = 10;
   int _runningCount = 0;
   int _failedCount = 0;
@@ -115,17 +117,21 @@ class HlsDownloader with Cancelable implements Downloader {
       _timer?.cancel();
     }
   }
+
   bool get isFinished => [
-    VideoDownloadProgressStatus.failed,
-    VideoDownloadProgressStatus.success,
-    VideoDownloadProgressStatus.canceled
-  ].contains(_downloadProgress.status);
+        VideoDownloadProgressStatus.failed,
+        VideoDownloadProgressStatus.success,
+        VideoDownloadProgressStatus.canceled
+      ].contains(_downloadProgress.status);
+
   @override
   Future<void> download(
     String url,
-    String saveDir, {
+    String saveDir,
+    Map<String, String> headers, {
     ValueChanged<VideoDownloadProgress>? onProgressUpdate,
   }) async {
+    _headers = headers;
     _onProgressUpdate = onProgressUpdate;
     _saveDir = saveDir;
     _downloadProgress = VideoDownloadProgress.start(saveDir: _saveDir);
@@ -200,11 +206,7 @@ class HlsDownloader with Cancelable implements Downloader {
     _dio.download(
       segment.url,
       savePath,
-      options: Options(
-        headers: {
-          'user-agent': userAgent
-        }
-      ),
+      options: Options(headers: _defaultHeaders),
       cancelToken: getCancelToken(),
       onReceiveProgress: (int loaded, int total) {
         debugPrint('${segment.url}: loaded: $loaded, total: $total');

@@ -39,6 +39,7 @@ class Mp4Downloader with Cancelable implements Downloader {
   late final List<_Range> rangeList;
   late final String _saveDir;
   late VideoDownloadProgress _downloadProgress;
+  late Map<String, String> _headers;
   ValueChanged<VideoDownloadProgress>? _onProgressUpdate;
   Timer? _timer;
   int _maxCount = 10;
@@ -50,6 +51,9 @@ class Mp4Downloader with Cancelable implements Downloader {
   int get _finishedCount => _completedCount + _failedCount;
   int _totalCount = 0;
   int _currentIndex = 0;
+
+  Map<String, dynamic> get _defaultHeaders =>
+      {'user-agent': userAgent, ..._headers};
 
   Mp4Downloader() {
     _dio.interceptors.add(RetryInterceptor(
@@ -81,9 +85,11 @@ class Mp4Downloader with Cancelable implements Downloader {
   @override
   Future<void> download(
     String url,
-    String saveDir, {
+    String saveDir,
+    Map<String, String> headers, {
     ValueChanged<VideoDownloadProgress>? onProgressUpdate,
   }) async {
+    _headers = headers;
     _onProgressUpdate = onProgressUpdate;
     _saveDir = saveDir;
     _downloadProgress = VideoDownloadProgress.start(saveDir: _saveDir);
@@ -154,9 +160,7 @@ class Mp4Downloader with Cancelable implements Downloader {
     final String savePath = path.join(_saveDir, range.filename);
     final int start = range.start;
     final String end = range.end == 0 ? '' : range.end.toString();
-    final Map<String, dynamic> headers = {
-      'user-agent': userAgent
-    };
+    final Map<String, dynamic> headers = {..._defaultHeaders};
     if (start != -1) {
       headers[HttpHeaders.rangeHeader] = 'bytes=$start-$end';
     }
@@ -241,7 +245,9 @@ class Mp4Downloader with Cancelable implements Downloader {
       _Range(start: -1, end: -1, url: url, filename: '0$extension')
     ];
     try {
-      final res = await _dio.head(url, cancelToken: getCancelToken());
+      final res = await _dio.head(url,
+          cancelToken: getCancelToken(),
+          options: Options(headers: _defaultHeaders));
       final List<String> acceptRanges =
           res.headers[HttpHeaders.acceptRangesHeader] ?? [];
       final List<String> contentLength =
