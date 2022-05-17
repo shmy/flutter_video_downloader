@@ -26,9 +26,11 @@ class FlutterVideoDownloader extends ChangeNotifier {
   }) {
     _url = url;
     _saveDir = saveDir;
+    final VideoDownloadProgress initialProgress = VideoDownloadProgress.start(saveDir: _saveDir);
+    progress = initialProgress;
     _progressThrottle = Throttle<VideoDownloadProgress>(
         const Duration(seconds: 1),
-        initialValue: VideoDownloadProgress.start(saveDir: _saveDir),
+        initialValue: initialProgress,
         onChanged: (value) {
       progress = value;
       notifyListeners();
