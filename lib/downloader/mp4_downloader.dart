@@ -164,14 +164,12 @@ class Mp4Downloader with Cancelable implements Downloader {
     if (start != -1) {
       headers[HttpHeaders.rangeHeader] = 'bytes=$start-$end';
     }
-    debugPrint('${range.url} $headers');
     _dio.download(
       range.url,
       savePath,
       cancelToken: getCancelToken(),
       options: Options(headers: headers),
       onReceiveProgress: (int loaded, int total) {
-        debugPrint('${range.url}: loaded: $loaded, total: $total');
         _progressMap[range.filename] = _DownloadProgress(
           loaded: loaded,
           total: total,

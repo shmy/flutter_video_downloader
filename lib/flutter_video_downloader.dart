@@ -1,6 +1,7 @@
 library flutter_video_downloader;
 
 import 'dart:io';
+import 'package:debounce_throttle/debounce_throttle.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_video_downloader/common.dart';
@@ -14,6 +15,8 @@ class FlutterVideoDownloader extends ChangeNotifier {
   late String _url;
   late String _saveDir;
   late VideoDownloadProgress progress;
+  late final Throttle<VideoDownloadProgress> _progressThrottle;
+
   Map<String, String> _headers = {};
 
   FlutterVideoDownloader({
@@ -23,6 +26,13 @@ class FlutterVideoDownloader extends ChangeNotifier {
   }) {
     _url = url;
     _saveDir = saveDir;
+    _progressThrottle = Throttle<VideoDownloadProgress>(
+        const Duration(seconds: 1),
+        initialValue: VideoDownloadProgress.start(saveDir: _saveDir),
+        onChanged: (value) {
+      progress = value;
+      notifyListeners();
+    });
     if (headers != null) {
       _headers = headers;
     }
@@ -54,15 +64,13 @@ class FlutterVideoDownloader extends ChangeNotifier {
       }
     }
     _downloader = downloader;
-    progress = VideoDownloadProgress.start(saveDir: _saveDir);
     await _mkdir(_saveDir);
     _downloader.download(
       _url,
       _saveDir,
       _headers,
       onProgressUpdate: (VideoDownloadProgress progress) {
-        this.progress = progress;
-        notifyListeners();
+        _progressThrottle.setValue(progress);
       },
     );
   }

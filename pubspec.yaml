@@ -14,6 +14,7 @@ dependencies:
   flutter_hls_parser: ^2.0.0
   nanoid: ^1.0.0
   dio_smart_retry: ^1.2.0
+  debounce_throttle: ^2.0.0
 
 dev_dependencies:
   flutter_test:

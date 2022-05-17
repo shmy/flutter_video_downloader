@@ -209,7 +209,6 @@ class HlsDownloader with Cancelable implements Downloader {
       options: Options(headers: _defaultHeaders),
       cancelToken: getCancelToken(),
       onReceiveProgress: (int loaded, int total) {
-        debugPrint('${segment.url}: loaded: $loaded, total: $total');
         _progressMap[segment.filename] = _TsProgress(
           loaded: loaded,
           total: total,
