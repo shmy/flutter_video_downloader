@@ -36,13 +36,11 @@ class FlutterVideoDownloader {
   static void enqueue({
     required String url,
     required String savedDir,
-    required String filename,
     required String extra,
   }) {
     _runner.enqueue(
       url: url,
       savedDir: savedDir,
-      filename: filename,
       extra: extra,
     );
   }

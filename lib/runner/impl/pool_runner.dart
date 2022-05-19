@@ -39,11 +39,10 @@ class PoolRunner implements Runner {
   void enqueue({
     required String url,
     required String savedDir,
-    required String filename,
     required String extra,
   }) async {
     final DownloadTask task = await Sqlite.createDownloadTask(
-        url: url, savedDir: savedDir, filename: filename, extra: extra);
+        url: url, savedDir: savedDir, extra: extra);
     if (_canAdd) {
       if (task.status == DownloadStatus.idle) {
         _currentRunnerCount++;
@@ -86,6 +85,8 @@ class PoolRunner implements Runner {
         _onTaskUpdate(task.copyWith(status: DownloadStatus.failed));
         return;
       }
+      await _onTaskUpdate(task.copyWith(status: DownloadStatus.downloading, filename: path.url.basename(Uri.parse(fetchResult.url).path)));
+
       final Downloader downloader = ConcurrentDownloader(
         maxConcurrentCount: 10,
       );

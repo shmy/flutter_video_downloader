@@ -35,7 +35,6 @@ class Sqlite {
   static Future<DownloadTask> createDownloadTask({
     required String url,
     required String savedDir,
-    required String filename,
     required String extra,
   }) async {
     late DownloadTask task;
@@ -44,7 +43,7 @@ class Sqlite {
       final id = await _db!.insert(_tableName, {
         'url': url,
         'saved_dir': savedDir,
-        'filename': filename,
+        'filename': '',
         'extra': extra,
         'created_at': DateTime.now().millisecondsSinceEpoch,
       });

@@ -77,10 +77,9 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void _enqueue(String url, dirName) {
     final savedDir = path.join(dir, dirName);
-    final filename = 'video.mp4';
     final extra = json.encode({'raw_id': 1});
     FlutterVideoDownloader.enqueue(
-        url: url, savedDir: savedDir, filename: filename, extra: extra);
+        url: url, savedDir: savedDir, extra: extra);
   }
 
   void _refreshList() async {

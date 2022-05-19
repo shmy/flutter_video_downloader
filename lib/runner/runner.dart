@@ -17,7 +17,6 @@ abstract class Runner {
   void enqueue({
     required String url,
     required String savedDir,
-    required String filename,
     required String extra,
   });
 
