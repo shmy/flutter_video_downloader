@@ -27,4 +27,6 @@ abstract class Runner {
 
   void retry(DownloadTask downloadTask);
 
+  void resumeAll();
+
 }

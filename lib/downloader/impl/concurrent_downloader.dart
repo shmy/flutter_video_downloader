@@ -64,7 +64,7 @@ class ConcurrentDownloader with _Cancelable implements Downloader {
   Future<void> cancel() async {
     _stopTimer();
     _cancelAll();
-    _downloadTask = _downloadTask.copyWith(status: DownloadStatus.canceled);
+    _downloadTask = _downloadTask.copyWith(status: DownloadStatus.canceled, speed: 0);
     _sendEvent();
   }
 
@@ -188,6 +188,7 @@ class ConcurrentDownloader with _Cancelable implements Downloader {
       },
     ).catchError((error) {
       _onChunkDownloadFail();
+      return Response(requestOptions: RequestOptions(path: ''));
     }).then((value) {
       _onChunkDownloadSuccess();
       _check();

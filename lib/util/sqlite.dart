@@ -68,4 +68,8 @@ class Sqlite {
   static Future<void> updateTask(DownloadTask task) async {
     await _db!.update(_tableName, task.toJSON(), where: 'id = ?', whereArgs: [task.id]);
   }
+  static Future<List<DownloadTask>> getAllUnFinishedTask() async {
+    final List rows = await _db!.query(_tableName, where: 'status != ?', whereArgs: [DownloadStatus.success]);
+    return rows.map((e) => DownloadTask.fromJSON(e)).toList();
+  }
 }

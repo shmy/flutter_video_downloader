@@ -19,6 +19,8 @@ class PoolRunner implements Runner {
   int _currentRunnerCount = 0;
   final Map<int, Downloader> _pool = {};
 
+  bool get _canAdd => _currentRunnerCount < _maxRunnerCount;
+
   void setFetchCallback(FetchCallback callback) {
     _fetchCallback = callback;
   }
@@ -28,7 +30,10 @@ class PoolRunner implements Runner {
   }
 
   @override
-  void cancel(DownloadTask downloadTask) {}
+  void cancel(DownloadTask downloadTask) {
+    _pool[downloadTask.id]?.cancel();
+    _pool.remove(downloadTask.id);
+  }
 
   @override
   void enqueue({
@@ -36,10 +41,15 @@ class PoolRunner implements Runner {
     required String savedDir,
     required String filename,
     required String extra,
-  }) {
-    Sqlite.createDownloadTask(
+  }) async {
+    final DownloadTask task = await Sqlite.createDownloadTask(
         url: url, savedDir: savedDir, filename: filename, extra: extra);
-    _check();
+    if (_canAdd) {
+      if (task.status == DownloadStatus.idle) {
+        _currentRunnerCount++;
+        _download(task);
+      }
+    }
   }
 
   @override
@@ -49,49 +59,64 @@ class PoolRunner implements Runner {
 
   @override
   void retry(DownloadTask downloadTask) {
-    // TODO: implement retry
+    _download(downloadTask);
   }
 
-  void _check() {
-    if (_currentRunnerCount < _maxRunnerCount) {
+  Future<void> _check() async {
+    if (_canAdd) {
       _currentRunnerCount++;
-      _startNext();
+      DownloadTask? task = await Sqlite.getFirstIdle();
+      if (task == null) {
+        _onDownloadFinished();
+        return;
+      }
+      task = task.copyWith(status: DownloadStatus.fetching);
+      await _onTaskUpdate(task);
+      _download(task);
     }
   }
 
-  Future<void> _startNext() async {
-     DownloadTask? task = await Sqlite.getFirstIdle();
-    if (task == null) {
-      return;
-    }
-     task = task.copyWith(status: DownloadStatus.fetching);
-    _onUpdated?.call(task);
+  Future<void> _download(DownloadTask task) async {
     final FetchResult fetchResult = await _fetchCallback(task.url, task.extra);
     if (fetchResult.isSuccess) {
       final Parser parser =
           await _getParserByUrl(fetchResult.url, fetchResult.headers);
       final List<ParsedSegment> segments = await parser.parse(fetchResult.url);
       if (segments.isEmpty) {
-        _onUpdated?.call(task.copyWith(status: DownloadStatus.failed));
-        _onDownloadFailed();
+        _onTaskUpdate(task.copyWith(status: DownloadStatus.failed));
         return;
       }
-      final Downloader downloader =
-          ConcurrentDownloader(maxConcurrentCount: 10);
+      final Downloader downloader = ConcurrentDownloader(
+        maxConcurrentCount: 10,
+      );
       _pool[task.id] = downloader;
-      _pool[task.id]!.download(task, segments, onProgressUpdate: (DownloadTask task) {
-        Sqlite.updateTask(task);
-        _onUpdated?.call(task);
-      });
+      _pool[task.id]!.download(
+        task,
+        segments,
+        onProgressUpdate: (DownloadTask task) {
+          _onTaskUpdate(task);
+        },
+        mergeFiles: parser.runtimeType == HttpRangeParser,
+      );
     } else {
-      _onUpdated?.call(task.copyWith(status: DownloadStatus.failed));
-      _onDownloadFailed();
+      _onTaskUpdate(task.copyWith(status: DownloadStatus.failed));
     }
   }
-  void _onDownloadFailed() {
-    _currentRunnerCount --;
+
+  Future<void> _onTaskUpdate(DownloadTask task) async {
+    await Sqlite.updateTask(task);
+    _onUpdated?.call(task);
+    if ([DownloadStatus.canceled, DownloadStatus.success, DownloadStatus.failed]
+        .contains(task.status)) {
+      _onDownloadFinished();
+    }
+  }
+
+  void _onDownloadFinished() {
+    _currentRunnerCount--;
     _check();
   }
+
   Future<Parser> _getParserByUrl(
       String url, Map<String, dynamic> headers) async {
     late Parser parser;
@@ -117,5 +142,10 @@ class PoolRunner implements Runner {
       }
     }
     return parser;
+  }
+
+  @override
+  void resumeAll() {
+    _check();
   }
 }
