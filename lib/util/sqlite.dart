@@ -71,4 +71,7 @@ class Sqlite {
     final List rows = await _db!.query(_tableName, where: 'status != ?', whereArgs: [DownloadStatus.success]);
     return rows.map((e) => DownloadTask.fromJSON(e)).toList();
   }
+  static Future<void> removeById(int id) async {
+    await _db!.delete(_tableName, where: 'id = ?', whereArgs: [id]);
+  }
 }

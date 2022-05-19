@@ -50,4 +50,7 @@ class FlutterVideoDownloader {
   static void retry(DownloadTask task) {
     _runner.retry(task);
   }
+  static void remove(DownloadTask task) {
+    _runner.remove(task);
+  }
 }

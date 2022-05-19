@@ -78,8 +78,7 @@ class _MyHomePageState extends State<MyHomePage> {
   void _enqueue(String url, dirName) {
     final savedDir = path.join(dir, dirName);
     final extra = json.encode({'raw_id': 1});
-    FlutterVideoDownloader.enqueue(
-        url: url, savedDir: savedDir, extra: extra);
+    FlutterVideoDownloader.enqueue(url: url, savedDir: savedDir, extra: extra);
   }
 
   void _refreshList() async {
@@ -140,9 +139,25 @@ class _MyHomePageState extends State<MyHomePage> {
               itemBuilder: (context, index) {
                 final item = _tasks[index];
                 return ListTile(
-                  title: Text(path.url.basename(item.url)),
-                  subtitle: Text(
-                      '${_format2Mb(item.loaded)}/${_format2Mb(item.total)} ${_format2Mb(item.speed)}/s'),
+                  title: Text(
+                      '[${path.url.basename(item.url)}]${_format2Mb(item.loaded)}/${_format2Mb(item.total)} ${_format2Mb(item.speed)}/s'),
+                  subtitle: Row(
+                    children: [
+                      MaterialButton(
+                        onPressed: () => FlutterVideoDownloader.cancel(item),
+                        child: Text('取消'),
+                      ),
+                      MaterialButton(
+                        onPressed: () => FlutterVideoDownloader.retry(item),
+                        child: Text('重试'),
+                      ),
+
+                      MaterialButton(
+                        onPressed: () => FlutterVideoDownloader.remove(item),
+                        child: Text('删除'),
+                      ),
+                    ],
+                  ),
                   trailing: Text(item.status.toString()),
                   onTap: () => FlutterVideoDownloader.retry(item),
                 );

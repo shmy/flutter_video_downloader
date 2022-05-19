@@ -14,18 +14,18 @@ class FetchResult {
 typedef FetchCallback = Future<FetchResult> Function(String url, String extra);
 
 abstract class Runner {
-  void enqueue({
+  Future<void> enqueue({
     required String url,
     required String savedDir,
     required String extra,
   });
 
-  void cancel(DownloadTask downloadTask);
+  Future<void> cancel(DownloadTask downloadTask);
 
-  void remove(DownloadTask downloadTask);
+  Future<void> remove(DownloadTask downloadTask);
 
-  void retry(DownloadTask downloadTask);
+  Future<void> retry(DownloadTask downloadTask);
 
-  void resumeAll();
+  Future<void> resumeAll();
 
 }

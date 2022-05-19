@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_video_downloader/constant/constant.dart';
@@ -30,13 +32,14 @@ class PoolRunner implements Runner {
   }
 
   @override
-  void cancel(DownloadTask downloadTask) {
+  Future<void> cancel(DownloadTask downloadTask) async {
     _pool[downloadTask.id]?.cancel();
     _pool.remove(downloadTask.id);
+    _check();
   }
 
   @override
-  void enqueue({
+  Future<void> enqueue({
     required String url,
     required String savedDir,
     required String extra,
@@ -52,15 +55,23 @@ class PoolRunner implements Runner {
   }
 
   @override
-  void remove(DownloadTask downloadTask) {
-    // TODO: implement remove
+  Future<void> remove(DownloadTask downloadTask) async {
+    await cancel(downloadTask);
+    await Sqlite.removeById(downloadTask.id);
+    await Directory(downloadTask.savedDir).delete(recursive: true);
+    _check();
   }
 
   @override
-  void retry(DownloadTask downloadTask) {
-    _download(downloadTask);
+  Future<void> retry(DownloadTask downloadTask) async  {
+    _onTaskUpdate(downloadTask.copyWith(status: DownloadStatus.idle));
+    _check();
   }
 
+  @override
+  Future<void> resumeAll() async {
+    _check();
+  }
   Future<void> _check() async {
     if (_canAdd) {
       _currentRunnerCount++;
@@ -150,8 +161,4 @@ class PoolRunner implements Runner {
     return parser;
   }
 
-  @override
-  void resumeAll() {
-    _check();
-  }
 }
