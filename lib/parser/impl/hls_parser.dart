@@ -5,7 +5,7 @@ import 'package:flutter_hls_parser/flutter_hls_parser.dart';
 import 'package:path/path.dart' as path;
 
 const String _keyName = 'enc.key';
-const String _m3u8Name = 'index.m3u8';
+const String hlsM3u8Name = 'index.m3u8';
 const String _tsPrefixName = 'index_';
 const String TAG_EXTM3U = '#EXTM3U';
 const String TAG_EXT_X_ENDLIST = '#EXT-X-ENDLIST';
@@ -66,7 +66,7 @@ class HlsParser implements Parser {
 
         result.add(ParsedSegment(
           url: url,
-          filename: _m3u8Name,
+          filename: hlsM3u8Name,
           headers: {},
           responseBody: _toM3u8(result, playlist, keyPlaceholder, keyUrl),
         ));

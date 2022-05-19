@@ -85,7 +85,12 @@ class PoolRunner implements Runner {
         _onTaskUpdate(task.copyWith(status: DownloadStatus.failed));
         return;
       }
-      await _onTaskUpdate(task.copyWith(status: DownloadStatus.downloading, filename: path.url.basename(Uri.parse(fetchResult.url).path)));
+      task = task.copyWith(
+          status: DownloadStatus.downloading,
+          filename: parser.runtimeType == HlsParser
+              ? hlsM3u8Name
+              : path.url.basename(Uri.parse(fetchResult.url).path));
+      await _onTaskUpdate(task);
 
       final Downloader downloader = ConcurrentDownloader(
         maxConcurrentCount: 10,
