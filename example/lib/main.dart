@@ -1,7 +1,9 @@
 import 'dart:io';
 
+import 'package:example/test/parser_test_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_video_downloader/flutter_video_downloader.dart';
+import 'package:flutter_video_downloader/runner/runner.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
 import 'package:shelf/shelf_io.dart' as io;
@@ -37,11 +39,18 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  FlutterVideoDownloader? videoDownloader;
+  late String dir;
 
   @override
   void initState() {
     _startServer();
+    FlutterVideoDownloader.init(
+        fetchCallback: (String url, String extra) async {
+      return FetchResult(isSuccess: true, url: url, headers: {});
+    });
+    FlutterVideoDownloader.addListener((value) {
+      print(value);
+    });
     super.initState();
   }
 
@@ -49,24 +58,6 @@ class _MyHomePageState extends State<MyHomePage> {
     return (size / 1024 / 1024).toStringAsFixed(2) + "Mb";
   }
 
-  Future<void> _start() async {
-    final dir = await findLocalPath();
-    videoDownloader = FlutterVideoDownloader(
-        url: 'http://192.168.2.161:3000/190204084208765161/index.m3u8',
-        saveDir: dir)
-      ..start()
-      ..addListener(() {
-        final progress = videoDownloader!.progress;
-        print(
-            '(${progress.status})${progress.startTime}: ${_format2Mb(progress.downloaded)}/${_format2Mb(progress.total)} ${_format2Mb(progress.speed)}/s [${progress.failedChunksCount}+${progress.completedChunksCount}/${progress.chunksCount}] ${progress.saveDir}/${progress.playFile} ${progress.endTime}');
-      });
-  }
-  void _cancel() {
-    videoDownloader?.cancel();
-  }
-  void _stop() {
-    videoDownloader?.stop();
-  }
   Future<String> findLocalPath() async {
     String dir = '';
     if (Platform.isAndroid) {
@@ -85,7 +76,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void _startServer() async {
-    final dir = await findLocalPath();
+    dir = await findLocalPath();
     var handler = createStaticHandler(
       dir,
       listDirectories: true,
@@ -102,16 +93,13 @@ class _MyHomePageState extends State<MyHomePage> {
       body: ListView(
         children: [
           MaterialButton(
-            onPressed: _start,
-            child: const Text('start'),
-          ),
-          MaterialButton(
-            onPressed: _cancel,
-            child: const Text('cancel'),
-          ),
-          MaterialButton(
-            onPressed: _stop,
-            child: const Text('stop'),
+            onPressed: () {
+              Navigator.of(context)
+                  .push(MaterialPageRoute(builder: (BuildContext context) {
+                return ParserTestPage(savedDir: dir);
+              }));
+            },
+            child: const Text('Parser Test'),
           ),
         ],
       ),
